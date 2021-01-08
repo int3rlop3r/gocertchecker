@@ -34,7 +34,6 @@ func main() {
 		fmt.Printf("hostname '%s' verified\n", host)
 	}
 	state := conn.ConnectionState()
-	fmt.Println(conn.ConnectionState().Version)
 	for _, pCert := range state.PeerCertificates {
 		fmt.Println("Issuer:", pCert.Issuer)
 	}
