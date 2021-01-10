@@ -7,6 +7,24 @@ import (
 	"os"
 )
 
+func sslVersionStr(v uint16) (string, error) {
+	switch v {
+	case tls.VersionTLS10:
+		return "TLS 1.0", nil
+	case tls.VersionTLS11:
+		return "TLS 1.1", nil
+	case tls.VersionTLS12:
+		return "TLS 1.2", nil
+	case tls.VersionTLS13:
+		return "TLS 1.3", nil
+	case tls.VersionSSL30:
+		return "TLS 3.0", nil
+	default:
+		return "", fmt.Errorf("%x not a valid ssl version")
+
+	}
+}
+
 func main() {
 	var port string
 	flag.StringVar(&port, "port", "443", "Port no. of the remote service")
@@ -19,21 +37,21 @@ func main() {
 
 	var config tls.Config
 	addr := fmt.Sprintf("%s:%s", host, port)
-	fmt.Println("connecting to:", addr)
+	fmt.Printf("Connecting to: '%s'. ", addr)
 	conn, err := tls.Dial("tcp", addr, &config)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "couldn't connect to host '%s', err: %s\n", addr, err)
 		return
 	}
 
-	err = conn.VerifyHostname(host)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "hostname doesn't match cert, err: %s\n", err)
-		return
-	} else {
-		fmt.Printf("hostname '%s' verified\n", host)
-	}
 	state := conn.ConnectionState()
+	version, err := sslVersionStr(state.Version)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println("SSL/TLS version:", version)
+	}
+
 	for _, pCert := range state.PeerCertificates {
 		fmt.Println("Issuer:", pCert.Issuer)
 	}
