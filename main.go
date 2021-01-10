@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"flag"
 	"fmt"
 	"os"
@@ -39,6 +40,15 @@ func main() {
 	addr := fmt.Sprintf("%s:%s", host, port)
 	fmt.Printf("Connecting to: '%s'. ", addr)
 	conn, err := tls.Dial("tcp", addr, &config)
+	if _, ok := err.(x509.UnknownAuthorityError); ok {
+		config.InsecureSkipVerify = true
+		fmt.Printf("Unverified hostname '%s'\n", host)
+		conn, err = tls.Dial("tcp", addr, &config)
+	} else if err == nil {
+		fmt.Printf("Verified hostname '%s'\n", host)
+	}
+
+	// catches both errors
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "couldn't connect to host '%s', err: %s\n", addr, err)
 		return
